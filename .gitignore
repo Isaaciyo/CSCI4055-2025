@@ -1,0 +1,9 @@
+.DS_Store
+*.class
+/out/
+/lib/*.jar
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
