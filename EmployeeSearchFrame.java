@@ -104,6 +104,8 @@ public class EmployeeSearchFrame extends JFrame {
 		btnDBFill.setFont(new Font("Times New Roman", Font.BOLD, 12));
 		btnDBFill.setBounds(307, 19, 68, 23);
 		contentPane.add(btnDBFill);
+		// Pressing Enter in the Database box does the same thing as clicking Fill.
+		txtDatabase.addActionListener(e -> btnDBFill.doClick());
 		
 		JLabel lblDepartment = new JLabel("Department");
 		lblDepartment.setFont(new Font("Times New Roman", Font.BOLD, 12));
