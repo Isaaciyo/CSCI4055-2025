@@ -6,6 +6,8 @@
 
 import java.awt.EventQueue;
 
+import java.util.List;
+
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -22,6 +24,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JOptionPane;
 import java.sql.SQLException;
+import java.util.List;
 
 import src.database.DatabaseManager;
 import src.query.EmployeeSearchQuery;
@@ -115,11 +118,20 @@ public class EmployeeSearchFrame extends JFrame {
 		lblProject.setBounds(255, 63, 47, 14);
 		contentPane.add(lblProject);
 		
-		lstProject = new JList<String>(new DefaultListModel<String>());
-		lstProject.setFont(new Font("Tahoma", Font.PLAIN, 12));
-		lstProject.setModel(project);
-		lstProject.setBounds(225, 84, 150, 42);
-		contentPane.add(lstProject);
+		
+lstProject = new JList<String>(project);
+lstProject.setFont(new Font("Tahoma", Font.PLAIN, 12));
+
+// Allow multiple projects to be selected
+lstProject.setSelectionMode(
+    javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
+);
+
+// Add a scrollable container
+JScrollPane scrollProject = new JScrollPane(lstProject);
+scrollProject.setBounds(225, 84, 150, 50);
+contentPane.add(scrollProject);
+
 		
 		JCheckBox chckbxNotDept = new JCheckBox("Not");
 		chckbxNotDept.setBounds(71, 133, 59, 23);
@@ -129,37 +141,112 @@ public class EmployeeSearchFrame extends JFrame {
 		chckbxNotProject.setBounds(270, 133, 59, 23);
 		contentPane.add(chckbxNotProject);
 		
-		lstDepartment = new JList<String>(new DefaultListModel<String>());
-		lstDepartment.setBounds(36, 84, 172, 40);
-		contentPane.add(lstDepartment);
-		lstDepartment.setFont(new Font("Tahoma", Font.PLAIN, 12));
-		lstDepartment.setModel(department);
+		
+lstDepartment = new JList<String>(department);
+lstDepartment.setFont(new Font("Tahoma", Font.PLAIN, 12));
+
+// Allow multiple departments to be selected
+lstDepartment.setSelectionMode(
+    javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION
+);
+
+// Add a scrollable container
+JScrollPane scrollDepartment = new JScrollPane(lstDepartment);
+scrollDepartment.setBounds(36, 84, 172, 50);
+contentPane.add(scrollDepartment);
+
 		
 		JLabel lblEmployee = new JLabel("Employee");
 		lblEmployee.setFont(new Font("Times New Roman", Font.BOLD, 12));
 		lblEmployee.setBounds(52, 179, 89, 14);
 		contentPane.add(lblEmployee);
 		
-		JButton btnSearch = new JButton("Search");
-		btnSearch.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				textAreaEmployee.setText("John Smith\nFranklin Wong");
-			}
-		});
+		
+	
+JButton btnSearch = new JButton("Search");
+
+btnSearch.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+        try {
+            // Get selected departments and projects
+            List<String> selectedDepartments =
+                lstDepartment.getSelectedValuesList();
+
+            List<String> selectedProjects =
+                lstProject.getSelectedValuesList();
+
+            // Get NOT checkbox values
+            boolean notDepartment = chckbxNotDept.isSelected();
+            boolean notProject = chckbxNotProject.isSelected();
+
+            // Execute employee search
+            List<String> employees = searchQuery.searchEmployees(
+                selectedDepartments,
+                notDepartment,
+                selectedProjects,
+                notProject
+            );
+
+            // Display results
+            textAreaEmployee.setText("");
+
+            if (employees.isEmpty()) {
+                textAreaEmployee.setText("No employees found.");
+            } else {
+                textAreaEmployee.setText(
+                    String.join("\n", employees)
+                );
+            }
+
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(
+                EmployeeSearchFrame.this,
+                "Employee search failed:\n" + ex.getMessage(),
+                "Search Error",
+                JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+});
+
+
 		btnSearch.setBounds(80, 276, 89, 23);
 		contentPane.add(btnSearch);
 		
-		JButton btnClear = new JButton("Clear");
-		btnClear.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				textAreaEmployee.setText("");
-			}
-		});
+		
+JButton btnClear = new JButton("Clear");
+btnClear.addActionListener(new ActionListener() {
+    public void actionPerformed(ActionEvent e) {
+
+        // Clear employee search results
+        textAreaEmployee.setText("");
+
+        // Clear selected departments
+        lstDepartment.clearSelection();
+
+        // Clear selected projects
+        lstProject.clearSelection();
+
+        // Uncheck both NOT checkboxes
+        chckbxNotDept.setSelected(false);
+        chckbxNotProject.setSelected(false);
+    }
+});
+
+
 		btnClear.setBounds(236, 276, 89, 23);
 		contentPane.add(btnClear);
 		
-		textAreaEmployee = new JTextArea();
-		textAreaEmployee.setBounds(36, 197, 339, 68);
-		contentPane.add(textAreaEmployee);
+		
+textAreaEmployee = new JTextArea();
+textAreaEmployee.setEditable(false);
+textAreaEmployee.setLineWrap(true);
+textAreaEmployee.setWrapStyleWord(true);
+
+// Add scrollable container for employee results
+JScrollPane scrollEmployee = new JScrollPane(textAreaEmployee);
+scrollEmployee.setBounds(36, 197, 339, 68);
+contentPane.add(scrollEmployee);
+
 	}
 }
