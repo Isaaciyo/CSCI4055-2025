@@ -1,16 +1,22 @@
 package src.database;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Locale;
+import java.util.Properties;
 
 /**
- * Opens and closes the SQLite connection.
+ * Finds and opens the SQLite database file.
  *
- * The user types a database name such as "company" and this class opens
- * resources/company.db. A name that already ends in ".db" is also accepted.
- * Only one connection is kept open at a time. Opening a new one closes the old one.
+ * The user types a database name such as "company" and this class finds
+ * resources/company.db. A name ending in ".db", or a relative/absolute path
+ * to an existing file, is also accepted. A missing file is never created.
  */
 public class DatabaseManager {
 
@@ -18,29 +24,55 @@ public class DatabaseManager {
 	private static Connection connection = null;
 	private static String currentName = null;
 
-	public static Connection open(String dbName) throws SQLException {
-		closeConnection();
-
-		dbName = dbName == null ? "" : dbName.trim();
-		if (dbName.isEmpty()) {
+	/**
+	 * Turns what the user typed into the real path of an existing, readable database file.
+	 * Bare names are checked in the working directory first, then in resources/ (adding .db).
+	 */
+	public static Path resolve(String dbName) throws SQLException {
+		if (dbName == null || dbName.trim().isEmpty()) {
 			throw new SQLException("Please type a database name first.");
 		}
-		String fileName = dbName.toLowerCase().endsWith(".db") ? dbName : dbName + ".db";
-		File file = new File(FOLDER, fileName);
-
-		// SQLite would silently create a new empty file, so check that it exists first.
-		if (!file.isFile()) {
-			throw new SQLException("File not found: " + FOLDER + "/" + fileName);
-		}
-
 		try {
-			Class.forName("org.sqlite.JDBC");
-		} catch (ClassNotFoundException e) {
-			throw new SQLException("SQLite JDBC driver not found. Put the sqlite-jdbc jar from lib/ on the classpath.");
+			Path file = Paths.get(dbName.trim());
+			if (!Files.exists(file) && !file.isAbsolute() && file.getNameCount() == 1) {
+				String name = file.toString();
+				if (!name.toLowerCase(Locale.ROOT).endsWith(".db")) {
+					name += ".db";
+				}
+				file = Paths.get(FOLDER, name);
+			}
+			file = file.toRealPath();
+			if (!Files.isRegularFile(file) || !Files.isReadable(file)) {
+				throw new SQLException("The database must be a readable file.");
+			}
+			return file;
+		} catch (IOException | InvalidPathException e) {
+			throw new SQLException("Database file does not exist or cannot be read: " + dbName, e);
 		}
+	}
 
-		connection = DriverManager.getConnection("jdbc:sqlite:" + file.getPath());
-		currentName = dbName;
+	/** Opens a new read-only connection to a file returned by resolve(). The caller closes it. */
+	public static Connection connectReadOnly(Path file) throws SQLException {
+		// URI encoding handles spaces, '?' and '#' in filenames.
+		String url = "jdbc:sqlite:" + file.toUri().toASCIIString() + "?mode=ro";
+		Properties options = new Properties();
+		// SQLITE_OPEN_READONLY: also prevents creating the file if it was removed.
+		options.setProperty("open_mode", "1");
+		try {
+			return DriverManager.getConnection(url, options);
+		} catch (SQLException e) {
+			if (e.getMessage() != null && e.getMessage().contains("No suitable driver")) {
+				throw new SQLException("SQLite JDBC driver is missing. Add the SQLite JDBC JAR to the runtime classpath.", e);
+			}
+			throw e;
+		}
+	}
+
+	/** Opens one shared read-only connection (used by EmployeeSearchQuery). */
+	public static Connection open(String dbName) throws SQLException {
+		closeConnection();
+		connection = connectReadOnly(resolve(dbName));
+		currentName = dbName.trim();
 		return connection;
 	}
 
