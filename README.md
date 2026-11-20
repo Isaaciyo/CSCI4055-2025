@@ -13,10 +13,10 @@ Group: **Ashutosh Thapa, Isaaciyo, Shirshak18**. Original template: https://gith
 | `CompanyDatabaseTest.java` | Standalone SQLite integration checks |
 | `resources/company.db` | Included COMPANY database |
 | `resources/buildCOMPANYdb.sql` | Original COMPANY schema and sample data script |
-| `src/database/DatabaseManager.java` | Earlier connection helper retained from main |
+| `src/database/DatabaseManager.java` | Finds the database file and opens read-only SQLite connections |
 | `src/query/EmployeeSearchQuery.java` | Earlier catalog helper retained from main |
 
-The completed GUI uses `CompanyDatabase`; the earlier helpers remain available in the repository. Every database operation closes its connection with try-with-resources, so there is no persistent connection to close when the window exits. Pressing Enter in the Database box runs Fill.
+The GUI uses `CompanyDatabase` for queries, which uses `DatabaseManager` to find and open the database file. Every database operation closes its connection with try-with-resources, so there is no persistent connection to close when the window exits. Pressing Enter in the Database box runs Fill.
 
 ## Setup and run
 
@@ -28,7 +28,7 @@ macOS / Linux:
 mkdir -p lib
 curl -fL https://repo.maven.apache.org/maven2/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar -o lib/sqlite-jdbc-3.54.1.0.jar
 mkdir -p out
-javac -d out EmployeeSearchFrame.java CompanyDatabase.java CompanyDatabaseTest.java
+javac -d out EmployeeSearchFrame.java CompanyDatabase.java CompanyDatabaseTest.java src/database/DatabaseManager.java
 java -cp 'out:lib/sqlite-jdbc-3.54.1.0.jar' EmployeeSearchFrame
 ```
 
@@ -36,7 +36,7 @@ Windows (after downloading the JAR into `lib`):
 
 ```bat
 mkdir out
-javac -d out EmployeeSearchFrame.java CompanyDatabase.java CompanyDatabaseTest.java
+javac -d out EmployeeSearchFrame.java CompanyDatabase.java CompanyDatabaseTest.java src/database/DatabaseManager.java
 java -cp "out;lib/sqlite-jdbc-3.54.1.0.jar" EmployeeSearchFrame
 ```
 

@@ -1,10 +1,5 @@
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,12 +7,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
+
+import src.database.DatabaseManager;
 
 /** Read-only access to the standard COMPANY tables in an existing SQLite file. */
 public final class CompanyDatabase {
-    private final String url;
+    private final Path file;
 
     /** Keep the database ID with each displayed name, including duplicate names. */
     public static final class Choice {
@@ -46,43 +41,12 @@ public final class CompanyDatabase {
     }
 
     public CompanyDatabase(String filename) throws SQLException {
-        if (filename == null || filename.trim().isEmpty()) {
-            throw new SQLException("Enter the path to an existing SQLite database file.");
-        }
-        try {
-            Path file = Paths.get(filename.trim());
-            // Preserve main's short-name convention (company -> resources/company.db).
-            // Explicit paths always refer to exactly the path the user entered.
-            if (!Files.exists(file) && !file.isAbsolute() && file.getNameCount() == 1) {
-                String name = file.toString();
-                if (!name.toLowerCase(Locale.ROOT).endsWith(".db")) {
-                    name += ".db";
-                }
-                file = Paths.get("resources", name);
-            }
-            file = file.toRealPath();
-            if (!Files.isRegularFile(file) || !Files.isReadable(file)) {
-                throw new SQLException("The database must be a readable file.");
-            }
-            // URI encoding handles spaces, '?' and '#' in filenames correctly.
-            url = "jdbc:sqlite:" + file.toUri().toASCIIString() + "?mode=ro";
-        } catch (IOException | InvalidPathException exception) {
-            throw new SQLException("Database file does not exist or cannot be read: " + filename, exception);
-        }
+        // Finding and checking the file is handled by DatabaseManager.
+        file = DatabaseManager.resolve(filename);
     }
 
     private Connection connect() throws SQLException {
-        Properties options = new Properties();
-        // SQLITE_OPEN_READONLY also prevents creation if the file is removed later.
-        options.setProperty("open_mode", "1");
-        try {
-            return DriverManager.getConnection(url, options);
-        } catch (SQLException exception) {
-            if (exception.getMessage() != null && exception.getMessage().contains("No suitable driver")) {
-                throw new SQLException("SQLite JDBC driver is missing. Add the SQLite JDBC JAR to the runtime classpath.", exception);
-            }
-            throw exception;
-        }
+        return DatabaseManager.connectReadOnly(file);
     }
 
     public Catalog loadCatalog() throws SQLException {
