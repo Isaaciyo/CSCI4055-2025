@@ -20,6 +20,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JOptionPane;
+import java.sql.SQLException;
+
+import src.database.DatabaseManager;
+import src.query.EmployeeSearchQuery;
 
 public class EmployeeSearchFrame extends JFrame {
 
@@ -31,6 +36,7 @@ public class EmployeeSearchFrame extends JFrame {
 	private JList<String> lstProject;
 	private DefaultListModel<String> project = new DefaultListModel<String>();
 	private JTextArea textAreaEmployee;
+	private final EmployeeSearchQuery searchQuery = new EmployeeSearchQuery();
 	/**
 	 * Launch the application.
 	 */
@@ -77,15 +83,21 @@ public class EmployeeSearchFrame extends JFrame {
 		 */
 		btnDBFill.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String[] dept = {"Headquarters", "Reorganization"};	
-				for(int i = 0; i < dept.length; i++) {
-					department.addElement(dept[i]);
+				// Reset both lists, then reload them from the entered database.
+				department.clear();
+				project.clear();
+				String name = txtDatabase.getText().trim();
+				try {
+					DatabaseManager.open(name);
+					searchQuery.checkSchema();
+					for (String d : searchQuery.loadDepartments()) department.addElement(d);
+					for (String p : searchQuery.loadProjects()) project.addElement(p);
+				} catch (SQLException ex) {
+					DatabaseManager.closeConnection();
+					JOptionPane.showMessageDialog(EmployeeSearchFrame.this,
+							"The database \"" + name + "\" could not be opened.\n\n" + ex.getMessage(),
+							"Database Error", JOptionPane.ERROR_MESSAGE);
 				}
-				String[] prj = {"ProdoctX", "ProductY", "ProductZ"};
-				for(int j = 0; j < prj.length; j++) {
-					project.addElement(prj[j]);
-				}
-				
 			}
 		});
 		
