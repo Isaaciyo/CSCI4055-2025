@@ -58,6 +58,7 @@ The original `resources/buildCOMPANYdb.sql` script is retained. Its final eight 
 - An empty selection leaves that category unrestricted, even if its Not checkbox is checked. With neither list selected, Search returns all employees.
 - **Search** replaces the employee results, sorted by last name, first name, and SSN. Multiple matching projects do not repeat an employee; separate employees with identical names remain separate rows. A status message reports zero matches.
 - **Clear** empties employee results, clears selections in both lists, and unchecks both Not boxes. It keeps the loaded departments, projects, and database filename.
+- Keyboard shortcuts: **Alt+F** runs Fill, **Alt+S** runs Search, and **Alt+C** runs Clear (on macOS, use Control+Option with the letter). After a successful Fill, pressing Enter outside the Database box runs Search; Enter in the Database box still runs Fill.
 - After editing the database filename, click Fill before searching. Database operations run in a background worker; controls are temporarily disabled while a request completes.
 
 Names are displayed with department/project numbers to distinguish duplicate names. Queries bind those numeric IDs through prepared statements.
@@ -83,7 +84,7 @@ After compiling, run the integration checks (no JUnit required):
 java -cp 'out:lib/sqlite-jdbc-3.54.1.0.jar' CompanyDatabaseTest
 ```
 
-On Windows, use `"out;lib/sqlite-jdbc-3.54.1.0.jar"` for the classpath. The tests create and delete temporary databases. They verify multiple selection, all four combinations of the two Not boxes, combined filters, employees without assignments, duplicate project and employee names, result deduplication, catalog refresh, unchanged database contents, empty data, invalid files, missing schema, filenames with special characters, and prevention of accidental database creation.
+On Windows, use `"out;lib/sqlite-jdbc-3.54.1.0.jar"` for the classpath. The tests create and delete temporary databases. They verify multiple selection, filenames with surrounding spaces, all four combinations of the two Not boxes, combined filters, employees without assignments, duplicate project and employee names, result deduplication, catalog refresh, unchanged database contents, empty data, invalid files, missing schema, filenames with special characters, and prevention of accidental database creation.
 
 For a manual GUI check, Fill your class database twice and confirm no duplicated entries. Select multiple items in each list, try both Not boxes, and check the results. Click Clear and confirm that employee results, selections, and checkboxes reset while department/project entries stay loaded. Resize the window and check scrolling with enough rows. Finally, Fill a nonexistent filename and confirm the alert and cleared lists.
 
