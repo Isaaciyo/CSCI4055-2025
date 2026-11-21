@@ -11,6 +11,7 @@ import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.event.KeyEvent;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -108,6 +109,9 @@ public final class EmployeeSearchFrame extends JFrame {
             clearSearch();
             status.setText(database == null ? "Enter a database filename, then click Fill." : "Search cleared.");
         });
+        btnDBFill.setMnemonic(KeyEvent.VK_F);
+        btnSearch.setMnemonic(KeyEvent.VK_S);
+        btnClear.setMnemonic(KeyEvent.VK_C);
         btnSearch.setEnabled(false);
         getRootPane().setDefaultButton(btnDBFill);
         setMinimumSize(new Dimension(580, 470));
@@ -141,6 +145,7 @@ public final class EmployeeSearchFrame extends JFrame {
         // Discard old data even if opening the next database fails.
         database = null;
         loadedFilename = null;
+        getRootPane().setDefaultButton(btnDBFill);
         department.clear();
         project.clear();
         clearSearch();
@@ -169,6 +174,8 @@ public final class EmployeeSearchFrame extends JFrame {
                     database = candidate;
                     loadedFilename = filename;
                     status.setText(department.size() + " departments, " + project.size() + " projects loaded.");
+                    // Once data is loaded, Enter runs Search (Enter in the Database box still runs Fill).
+                    getRootPane().setDefaultButton(btnSearch);
                 } catch (InterruptedException exception) {
                     Thread.currentThread().interrupt();
                     showFailure("Database could not be opened", exception);
