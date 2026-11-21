@@ -7,7 +7,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 import src.database.DatabaseManager;
 
 /**
@@ -62,4 +61,78 @@ public class EmployeeSearchQuery {
 	}
 
 	// TODO (search): add searchEmployees(depts, notDept, projs, notProj) here.
+
+
+public List<String> searchEmployees(
+        List<String> depts,
+        boolean notDept,
+        List<String> projs,
+        boolean notProj) throws SQLException {
+
+    List<String> employees = new ArrayList<>();
+    List<String> parameters = new ArrayList<>();
+
+    StringBuilder sql = new StringBuilder(
+        "SELECT DISTINCT E.Fname, E.Lname " +
+        "FROM EMPLOYEE E WHERE 1=1"
+    );
+
+    // Department filtering
+    if (!depts.isEmpty()) {
+        String placeholders = String.join(",",
+            java.util.Collections.nCopies(depts.size(), "?"));
+
+        sql.append(" AND E.Dno ");
+        sql.append(notDept ? "NOT IN (" : "IN (");
+        sql.append("SELECT Dnumber FROM DEPARTMENT ");
+        sql.append("WHERE Dname IN (");
+        sql.append(placeholders);
+        sql.append("))");
+
+        parameters.addAll(depts);
+    }
+
+    // Project filtering
+    if (!projs.isEmpty()) {
+        String placeholders = String.join(",",
+            java.util.Collections.nCopies(projs.size(), "?"));
+
+        sql.append(notProj
+            ? " AND NOT EXISTS ("
+            : " AND EXISTS (");
+
+        sql.append(
+            "SELECT 1 FROM WORKS_ON W " +
+            "JOIN PROJECT P ON W.Pno = P.Pnumber " +
+            "WHERE W.Essn = E.Ssn " +
+            "AND P.Pname IN (" + placeholders + "))"
+        );
+
+        parameters.addAll(projs);
+    }
+
+    sql.append(" ORDER BY E.Lname, E.Fname");
+
+    Connection conn = DatabaseManager.getConnection();
+
+    try (PreparedStatement ps =
+            conn.prepareStatement(sql.toString())) {
+
+        for (int i = 0; i < parameters.size(); i++) {
+            ps.setString(i + 1, parameters.get(i));
+        }
+
+        try (ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                employees.add(
+                    rs.getString("Fname") + " " +
+                    rs.getString("Lname")
+                );
+            }
+        }
+    }
+
+    return employees;
+}
+
 }
