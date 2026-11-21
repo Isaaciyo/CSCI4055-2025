@@ -84,6 +84,9 @@ public final class CompanyDatabaseTest {
             equal("catalog refresh", ids(database.loadCatalog().departments), Arrays.asList(4, 1, 7, 5));
             equal("repeated catalog load does not accumulate entries", database.loadCatalog().departments.size(), 4);
 
+            CompanyDatabase padded = new CompanyDatabase("  " + file + "  ");
+            equal("filename with surrounding spaces", ids(padded.loadCatalog().departments), Arrays.asList(4, 1, 7, 5));
+
             expectSqlFailure("blank filename", () -> new CompanyDatabase(" "));
             expectSqlFailure("missing file", () -> new CompanyDatabase(missing.toString()));
             equal("missing database was not created", Files.exists(missing), false);
