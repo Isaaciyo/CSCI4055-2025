@@ -20,27 +20,23 @@ The GUI uses `CompanyDatabase` for queries, which uses `DatabaseManager` to find
 
 ## Setup and run
 
-Install a JDK (Java 8 or newer) and download the [Xerial SQLite JDBC driver](https://github.com/xerial/sqlite-jdbc). The commands below use version 3.54.1.0 and run from the project directory. The repository also contains the earlier `lib/sqlite-jdbc-3.46.1.3.jar` and `resources/company.db`. New local JARs and database files are ignored by Git; these existing tracked files are preserved. Use the explicit classpath below so only version 3.54.1.0 is loaded.
+Install a JDK (Java 8 or newer). The SQLite JDBC driver (`lib/sqlite-jdbc-3.46.1.3.jar`) and the sample database (`resources/company.db`) are already in the repository, so nothing needs to be downloaded. Run the commands from the project directory.
 
 macOS / Linux:
 
 ```sh
-mkdir -p lib
-curl -fL https://repo.maven.apache.org/maven2/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar -o lib/sqlite-jdbc-3.54.1.0.jar
-mkdir -p out
 javac -d out EmployeeSearchFrame.java CompanyDatabase.java CompanyDatabaseTest.java src/database/DatabaseManager.java
-java -cp 'out:lib/sqlite-jdbc-3.54.1.0.jar' EmployeeSearchFrame
+java -cp 'out:lib/sqlite-jdbc-3.46.1.3.jar' EmployeeSearchFrame
 ```
 
-Windows (after downloading the JAR into `lib`):
+Windows:
 
 ```bat
-mkdir out
-javac -d out EmployeeSearchFrame.java CompanyDatabase.java CompanyDatabaseTest.java src/database/DatabaseManager.java
-java -cp "out;lib/sqlite-jdbc-3.54.1.0.jar" EmployeeSearchFrame
+javac -d out EmployeeSearchFrame.java CompanyDatabase.java CompanyDatabaseTest.java src\database\DatabaseManager.java
+java -cp "out;lib/sqlite-jdbc-3.46.1.3.jar" EmployeeSearchFrame
 ```
 
-In Eclipse, add these Java files to a Java project's source folder, then select **Project → Properties → Java Build Path → Libraries → Add External JARs** and add only `sqlite-jdbc-3.54.1.0.jar` to the classpath for this application. Run `EmployeeSearchFrame` as a Java application.
+In Eclipse, add these Java files to a Java project's source folder, then select **Project → Properties → Java Build Path → Libraries → Add JARs** and add `lib/sqlite-jdbc-3.46.1.3.jar`. Run `EmployeeSearchFrame` as a Java application.
 
 On JDK 24 or newer, add `--enable-native-access=ALL-UNNAMED` immediately after `java` in the run commands to permit the SQLite driver's native library loading without a warning.
 
@@ -81,10 +77,10 @@ The database must contain these standard tables and columns (additional columns 
 After compiling, run the integration checks (no JUnit required):
 
 ```sh
-java -cp 'out:lib/sqlite-jdbc-3.54.1.0.jar' CompanyDatabaseTest
+java -cp 'out:lib/sqlite-jdbc-3.46.1.3.jar' CompanyDatabaseTest
 ```
 
-On Windows, use `"out;lib/sqlite-jdbc-3.54.1.0.jar"` for the classpath. The tests create and delete temporary databases. They verify multiple selection, filenames with surrounding spaces, all four combinations of the two Not boxes, combined filters, employees without assignments, duplicate project and employee names, result deduplication, catalog refresh, unchanged database contents, empty data, invalid files, missing schema, filenames with special characters, and prevention of accidental database creation.
+On Windows, use `"out;lib/sqlite-jdbc-3.46.1.3.jar"` for the classpath. The tests create and delete temporary databases. They verify multiple selection, filenames with surrounding spaces, all four combinations of the two Not boxes, combined filters, employees without assignments, duplicate project and employee names, result deduplication, catalog refresh, unchanged database contents, empty data, invalid files, missing schema, filenames with special characters, and prevention of accidental database creation.
 
 For a manual GUI check, Fill your class database twice and confirm no duplicated entries. Select multiple items in each list, try both Not boxes, and check the results. Click Clear and confirm that employee results, selections, and checkboxes reset while department/project entries stay loaded. Resize the window and check scrolling with enough rows. Finally, Fill a nonexistent filename and confirm the alert and cleared lists.
 
